@@ -357,20 +357,48 @@ def existing_issues():
     return found
 
 
+def list_projects():
+    out = gh("project", "list", "--owner", ORG, "--format", "json", "--limit", "50", check=False)
+    try:
+        return json.loads(out or "{}").get("projects", [])
+    except json.JSONDecodeError:
+        return []
+
+
 class Board:
+    """Best effort: if the board is not set up right, it warns and the rest still runs."""
+
     def __init__(self, number):
+        self.ok = False
+        if str(number) == "auto":
+            projects = list_projects()
+            match = [p for p in projects if "brick" in (p.get("title") or "").lower()]
+            if len(match) != 1:
+                print("WARNING board: could not pick a project automatically. Org projects:")
+                for p in projects:
+                    print(f"   #{p.get('number')}  {p.get('title')}  {p.get('url', '')}")
+                print("   Re-run with --project <number>.")
+                return
+            number = match[0]["number"]
         self.number = str(number)
-        self.id = gh("project", "view", self.number, "--owner", ORG, "--format", "json", "--jq", ".id")
+        view = json.loads(gh("project", "view", self.number, "--owner", ORG, "--format", "json"))
+        self.id = view["id"]
+        print(f"board: #{self.number} '{view.get('title')}'  {view.get('url', '')}")
         fields = json.loads(gh("project", "field-list", self.number, "--owner", ORG, "--format", "json", "--limit", "50"))["fields"]
         self.status = next((f for f in fields if f["name"] == "Status"), None)
         self.wave = next((f for f in fields if f["name"] == "Wave"), None)
         self.area = next((f for f in fields if f["name"] == "Area"), None)
-        if not self.status:
-            sys.exit("Project has no 'Status' field.")
-        need = {"Backlog", "Ready"}
-        have = {o["name"] for o in self.status.get("options", [])}
-        if not need <= have:
-            sys.exit(f"Status field needs options {sorted(need)}; has {sorted(have)}")
+        have = [o["name"] for o in (self.status or {}).get("options", [])]
+        print(f"board: Status options = {have}")
+        if not {"Backlog", "Ready"} <= set(have):
+            print("WARNING board: Status needs 'Backlog' and 'Ready' options on THIS project. "
+                  "Fix it (or pick the right --project) and re-run; issues are unaffected.")
+            return
+        if not self.wave:
+            print("note board: no 'Wave' field (Number) on this project; skipping it.")
+        if not self.area:
+            print("note board: no 'Area' field (Single select) on this project; skipping it.")
+        self.ok = True
 
     def option(self, field, name):
         return next((o["id"] for o in field.get("options", []) if o["name"].lower() == name.lower()), None)
@@ -383,7 +411,7 @@ class Board:
            "--field-id", self.status["id"], "--single-select-option-id", self.option(self.status, name))
 
     def set_fields(self, item_id, task):
-        if self.wave and self.wave.get("type", "").endswith("Field") and "options" not in self.wave:
+        if self.wave and "options" not in self.wave:
             gh("project", "item-edit", "--id", item_id, "--project-id", self.id,
                "--field-id", self.wave["id"], "--number", str(task["wave"]), check=False)
         if self.area and "options" in self.area:
@@ -400,7 +428,7 @@ class Board:
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dry-run", action="store_true", help="print actions, change nothing")
-    ap.add_argument("--project", type=int, help="org Project number (from its URL) to add issues to")
+    ap.add_argument("--project", help="org Project number (from its URL), or 'auto' to find the 'Brick…' project")
     ap.add_argument("--assign", help='slot to GitHub handle, e.g. "A=me,B=bob,C=cara,D=dev"')
     ap.add_argument("--promote", action="store_true", help="Backlog -> Ready when all blockers are closed (needs --project)")
     ap.add_argument("--status", action="store_true", help="print a status table and exit")
@@ -422,7 +450,6 @@ def main():
             gh("label", "create", name, "-R", REPO, "--color", color, "--description", desc, "--force")
         print(f"labels: {len(LABELS)} ensured")
 
-    board = Board(a.project) if (a.project and not a.dry_run) else None
     numbers = {k: v["number"] for k, v in found.items()}
 
     for t in TASKS:                       # topological order: blockers are created first
@@ -444,10 +471,6 @@ def main():
         num = int(url.rstrip("/").split("/")[-1])
         numbers[t["key"]] = num
         print(f"created #{num} {t['title']}")
-        if board:
-            item = board.add(url)
-            board.set_status(item, "Ready" if t["wave"] == 1 else "Backlog")
-            board.set_fields(item, t)
 
     if a.assign:
         slots = dict(p.split("=", 1) for p in a.assign.replace(" ", "").split(",") if "=" in p)
@@ -461,13 +484,27 @@ def main():
                 gh("issue", "edit", str(numbers[t["key"]]), "-R", REPO, "--add-assignee", handle)
                 print(f"assigned #{numbers[t['key']]} {t['key']} -> @{handle}")
 
+    board = Board(a.project) if (a.project and not a.dry_run) else None
+    if board and board.ok:
+        items = {(it.get("content") or {}).get("number"): it for it in board.items()}
+        added = 0
+        for t in TASKS:
+            num = numbers[t["key"]]
+            it = items.get(num)
+            if it is None:
+                item_id = board.add(f"https://github.com/{REPO}/issues/{num}")
+                it = {"id": item_id, "status": ""}
+                added += 1
+            if not it.get("status") or it.get("status") == "Todo":
+                board.set_status(it["id"], "Ready" if t["wave"] == 1 else "Backlog")
+                board.set_fields(it["id"], t)
+        print(f"board: {added} card(s) added, statuses set (Wave 1 -> Ready, later waves -> Backlog)")
+
     if a.promote:
-        if not a.project:
-            sys.exit("--promote needs --project")
-        if a.dry_run:
-            print("would promote unblocked Backlog items to Ready")
+        if not (board and board.ok):
+            print("skip --promote: board not usable (see warnings above)")
+            print("done.")
             return
-        board = board or Board(a.project)
         state = {k: v["state"] for k, v in existing_issues().items()}
         by_num = {v: k for k, v in numbers.items()}
         for item in board.items():
