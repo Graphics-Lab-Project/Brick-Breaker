@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: build-test
+    runs-on: ubuntu-latest
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          cache: true
+
+      - name: Install build tools and runtime libs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgl1-mesa-dev libegl1 libxkbcommon-x11-0 libfontconfig1
+
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build
+
+      # REQUIRED: every test named by a file in ci/green/ must pass.
+      # A task adds its own marker (ci/green/<ctest name>) when its tests go green,
+      # so finished work can never silently regress.
+      - name: Test (green set, required)
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          markers=(ci/green/*)
+          if [ ${#markers[@]} -eq 0 ]; then echo "No green tests yet."; exit 0; fi
+          known="$(ctest --test-dir build -N | sed -n 's/^ *Test *#[0-9]*: //p')"
+          pattern=""
+          for m in "${markers[@]}"; do
+            n="$(basename "$m")"
+            if ! grep -qx "$n" <<< "$known"; then
+              echo "::error file=$m::'$n' is not a ctest test name"; exit 1
+            fi
+            pattern="${pattern:+$pattern|}$n"
+          done
+          echo "Green set: $pattern"
+          ctest --test-dir build --output-on-failure -R "^(${pattern})\$"
+
+      # INFORMATIONAL: the whole suite, including tasks not done yet (expected red).
+      - name: Full suite (informational)
+        continue-on-error: true
+        run: ctest --test-dir build -j4
