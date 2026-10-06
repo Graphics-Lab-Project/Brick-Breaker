@@ -1,0 +1,51 @@
+# OWNER: Phase 0 / integrator. Read-only for task agents.
+# One ctest entry per test file. The ctest name == the file's base name.
+
+function(bb_engine_test name)
+    qt_add_executable(${name} engine/${name}.cpp engine/TestUtil.h)
+    target_link_libraries(${name} PRIVATE bbcore Qt6::Test)
+    add_test(NAME ${name} COMMAND ${name})
+    set_tests_properties(${name} PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 60)
+endfunction()
+
+bb_engine_test(tst_phase0_sanity)
+bb_engine_test(tst_collision)
+bb_engine_test(tst_paddle_logic)
+bb_engine_test(tst_ball_physics)
+bb_engine_test(tst_brick_grid)
+bb_engine_test(tst_capsule_system)
+bb_engine_test(tst_powerups)
+bb_engine_test(tst_weapon_system)
+bb_engine_test(tst_pace_controller)
+bb_engine_test(tst_game_state_machine)
+bb_engine_test(tst_high_score_table)
+bb_engine_test(tst_models)
+bb_engine_test(tst_engine_core)
+bb_engine_test(tst_engine_balls)
+bb_engine_test(tst_engine_powerups)
+
+# Qt Quick Test runner shared by every QML test file
+qt_add_executable(bb_qmltest qml_runner.cpp)
+target_link_libraries(bb_qmltest PRIVATE bbcoreplugin Qt6::QuickTest Qt6::Quick Qt6::Qml)
+
+function(bb_qml_test name)
+    add_test(NAME ${name}
+             COMMAND bb_qmltest -input ${CMAKE_CURRENT_SOURCE_DIR}/qml/${name}.qml)
+    set_tests_properties(${name} PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 60)
+endfunction()
+
+bb_qml_test(tst_qml_sanity)
+bb_qml_test(tst_brick)
+bb_qml_test(tst_paddle)
+bb_qml_test(tst_sprites)
+bb_qml_test(tst_hud)
+bb_qml_test(tst_input_hint)
+bb_qml_test(tst_menu_screen)
+bb_qml_test(tst_options_screen)
+bb_qml_test(tst_help_screen)
+bb_qml_test(tst_overlays)
+bb_qml_test(tst_game_over)
+bb_qml_test(tst_fx_layer)
+bb_qml_test(tst_playfield)
+bb_qml_test(tst_game_screen)
+bb_qml_test(tst_app_root)

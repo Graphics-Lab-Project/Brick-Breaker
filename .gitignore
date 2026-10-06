@@ -1,0 +1,20 @@
+# build output
+build/
+build-*/
+out/
+cmake-build-*/
+CMakeLists.txt.user*
+*.autosave
+
+# IDEs
+.vs/
+.idea/
+.qtcreator/
+*.swp
+.DS_Store
+
+# local agent / MCP configs can hold tokens: never commit them (AGENTS.md R10)
+.mcp.json
+.cursor/mcp.json
+.vscode/mcp.json
+.env
