@@ -78,3 +78,7 @@
 ## Score persistence (user request)
 - Ruling: new layer ScoreStore (interface) + SqliteScoreStore (QtSql, new Qt module Sql, user-requested for future SQL leaderboard). Time = deterministic play time in microseconds (1/120 s resolution). Frozen edits by orchestrator: CMake, GameEngine.h, GameEngine_loop.cpp hooks, tests, stubs.
 - S1, S3: dispatched (task-coder, sonnet); S2 after S1
+- S3: complete (see git log)
+- S1: complete (see git log)
+- S2: dispatched (task-coder, sonnet)
+- S2: complete (see git log). Score persistence done: 36/36 tests green; real app creates ~/.local/share/GraphicsLab/BrickBreaker/scores.sqlite (runs, level_clears, user_version 1).
