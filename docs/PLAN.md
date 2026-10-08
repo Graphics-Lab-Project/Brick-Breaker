@@ -1,7 +1,7 @@
 # PLAN — Brick Breaker (Qt 6 QML + C++)
 
 Phase 0 output. Read with `AGENTS.md` (the contract) and `docs/DESIGN_HANDOFF.md` (look and motion).
-Issue titles start with the task key (e.g. `[E4]`), so keys below map 1:1 to GitHub issues.
+Task specs live in `tasks/<KEY>.md`; the index is `tasks/README.md`.
 
 ## Architecture (one page)
 
@@ -23,14 +23,19 @@ GameEngine (QObject, QML_ELEMENT)  — properties + signals + invokables = docs/
 ```
 
 - **All gameplay is C++ and deterministic** (fixed timestep, injected RNG). QML only renders, animates (T1 behind `polish`) and forwards input.
-- **Every file has exactly one owner task**, so parallel PRs never conflict. `GameEngine` is split over four `.cpp` files for that reason; `GameEngine_loop.cpp` holds the frozen shared helpers.
+- **Every file has exactly one owner task**, so parallel coder subagents never collide. `GameEngine` is split over four `.cpp` files for that reason; `GameEngine_loop.cpp` holds the frozen shared helpers.
 - **Tests come first.** Every task has one test file committed in Phase 0 (red now). Agents make them green and never edit them.
 - **UI tests use `tests/qml/MockEngine.qml`**, so UI work does not wait for the engine. Only `tst_app_root` uses the real engine.
 - Coordinates: logical 360×480 canvas (window 720×960, `scale: 2`); game coordinates are relative to the 336×336 playfield at (12, 104).
 
-## CI and the green set
+## How the build runs
 
-`build-test` builds everything and runs the tests named in `ci/green/` (required). The rest of the suite also runs but is informational, because unfinished tasks are red by design. Each task adds its own `ci/green/<test>` marker, so finished work stays protected. `scope-check` fails a PR that touches files outside its issue's **Allowed files**.
+Solo and local. The main Claude Code session runs the `build-tasks` skill
+(`.claude/skills/build-tasks/SKILL.md`) and acts as orchestrator: it dispatches coder subagents
+(`.claude/agents/task-coder*.md`, Sonnet or Haiku per task), verifies with
+`scripts/task_status.py` (a task is done exactly when its test passes), commits each finished
+task locally with `scripts/commit_task.py`, and loops until all tests pass. No branches, PRs or
+human review. CI (`.github/workflows/ci.yml`) builds and runs all 30 tests once the code is pushed.
 
 ## Gameplay numbers (approved; all in `src/engine/Constants.h`)
 
@@ -55,47 +60,12 @@ v1 scope decisions: everything drawn with QML `Rectangle`/`Text` (no PNG assets)
 
 ## Tasks and waves
 
-Wave 1 has no dependencies (22 tasks; split them across the 4 people). Waves 2–4 unlock as their blockers merge.
+The full table (dependencies, model, owned files, test) is `tasks/README.md`.
 
-| Wave | Key | Task | Owns | Test | Blocked by | Person |
-|---|---|---|---|---|---|---|
-| 1 | E1 | Engine: collision helpers | `src/engine/Collision.cpp` | `tst_collision` | — | B |
-| 1 | E2 | Engine: paddle logic | `src/engine/PaddleLogic.cpp` | `tst_paddle_logic` | — | C |
-| 1 | E3 | Engine: ball physics | `src/engine/BallPhysics.cpp` | `tst_ball_physics` | — | B |
-| 1 | E4 | Engine: brick grid + 10 levels | `src/engine/BrickGrid.cpp`, `src/engine/Levels.cpp` | `tst_brick_grid` | — | B |
-| 1 | E5 | Engine: capsule system | `src/engine/CapsuleSystem.cpp` | `tst_capsule_system` | — | C |
-| 1 | E6 | Engine: power-up rules | `src/engine/PowerUps.cpp` | `tst_powerups` | — | C |
-| 1 | E7 | Engine: weapon system | `src/engine/WeaponSystem.cpp` | `tst_weapon_system` | — | C |
-| 1 | E8 | Engine: pace controller (speed + wall descent) | `src/engine/PaceController.cpp` | `tst_pace_controller` | — | B |
-| 1 | E9 | Engine: game state machine | `src/engine/GameStateMachine.cpp` | `tst_game_state_machine` | — | A |
-| 1 | E10 | Engine: high-score table | `src/engine/HighScoreTable.cpp` | `tst_high_score_table` | — | A |
-| 1 | E11 | Engine: list models for QML | `src/engine/Models.cpp` | `tst_models` | — | A |
-| 1 | U1 | UI: Brick component | `qml/Brick.qml` | `tst_brick` | — | D |
-| 1 | U2 | UI: Paddle component | `qml/Paddle.qml` | `tst_paddle` | — | D |
-| 1 | U3 | UI: ball, capsule and projectile sprites | `qml/Ball.qml`, `qml/Capsule.qml`, `qml/Projectile.qml` | `tst_sprites` | — | D |
-| 1 | U4 | UI: HUD + pause button | `qml/Hud.qml`, `qml/PauseButton.qml` | `tst_hud` | — | D |
-| 1 | U5 | UI: input hint row | `qml/InputHint.qml` | `tst_input_hint` | — | B |
-| 1 | U6 | UI: main menu screen | `qml/MenuScreen.qml` | `tst_menu_screen` | — | A |
-| 1 | U7 | UI: options screen | `qml/OptionsScreen.qml` | `tst_options_screen` | — | A |
-| 1 | U8 | UI: help screen | `qml/HelpScreen.qml` | `tst_help_screen` | — | B |
-| 1 | U9 | UI: pause overlay + level banner | `qml/PauseOverlay.qml`, `qml/LevelBanner.qml` | `tst_overlays` | — | C |
-| 1 | U10 | UI: game over + initials entry | `qml/InitialsEntry.qml`, `qml/GameOverOverlay.qml` | `tst_game_over` | — | C |
-| 1 | U11 | UI: T1 effects layer | `qml/FxLayer.qml` | `tst_fx_layer` | — | D |
-| 2 | G1 | Engine: GameEngine core (invokables, input, levels, persistence) | `src/engine/GameEngine.cpp` | `tst_engine_core` | E2, E3, E4, E6, E8, E9, E10, E11 | A |
-| 2 | G2 | Engine: ball step (walls, paddle, bricks, losing balls) | `src/engine/GameEngine_balls.cpp` | `tst_engine_balls` | E1, E2, E3, E4, E6, E8, E11 | B |
-| 2 | G3 | Engine: power-ups and weapons in the engine | `src/engine/GameEngine_powerups.cpp` | `tst_engine_powerups` | E1, E2, E3, E4, E5, E6, E7, E8 | C |
-| 2 | U12 | UI: Board + Playfield | `qml/Board.qml`, `qml/Playfield.qml` | `tst_playfield` | U1, U2, U3 | D |
-| 3 | I1 | UI: Game screen (composition + input) | `qml/GameScreen.qml` | `tst_game_screen` | U4, U5, U9, U10, U11, U12 | D |
-| 4 | I2 | Integration: AppRoot + Main window + fonts | `qml/AppRoot.qml`, `qml/Main.qml`, `fonts/**` | `tst_app_root` | G1, G2, G3, I1, U6, U7, U8 | A |
-
-Person column = suggested owner (A = integrator). Each person keeps one engine/UI chain so wave 2 builds on code they already know. Wave-1 load: A 5, B 6, C 6, D 5 tasks.
-
-Suggested schedule for 4 days:
-
-- **Day 1:** Wave 1 (≈ 5–6 tasks each; engine and UI tasks mix well).
-- **Day 2:** finish Wave 1, then Wave 2 (G1, G2, G3, U12 in parallel).
-- **Day 3:** I1, then I2 (Person A), full manual play-through, bug issues.
-- **Day 4:** polish and buffer, freeze `main`, tag a release.
+- **Wave 1** (22 tasks, no dependencies): engine modules E1–E11 and UI components U1–U11.
+- **Wave 2:** G1 engine core, G2 ball step, G3 power-ups (need their engine modules), U12 playfield (needs U1–U3).
+- **Wave 3:** I1 game screen (needs the UI components and U12).
+- **Wave 4:** I2 app root + main window (needs everything).
 
 ## Phase 0 verification
 

@@ -1,6 +1,6 @@
 # build output
-build/
-build-*/
+/build/
+/build-*/
 out/
 cmake-build-*/
 CMakeLists.txt.user*
@@ -18,3 +18,8 @@ CMakeLists.txt.user*
 .cursor/mcp.json
 .vscode/mcp.json
 .env
+
+# per-coder build directories
+/build-agents/
+.superpowers/
+__pycache__/

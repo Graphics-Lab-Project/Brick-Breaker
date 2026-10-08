@@ -1,11 +1,46 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(cmake *)",
+      "Bash(ctest *)",
+      "Bash(python3 scripts/*)",
+      "Bash(QT_QPA_PLATFORM=offscreen *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git restore *)",
+      "Edit(src/**)",
+      "Write(src/**)",
+      "Edit(qml/**)",
+      "Write(qml/**)",
+      "Edit(tasks/LEDGER.md)",
+      "Write(tasks/LEDGER.md)"
+    ],
     "deny": [
-      "Bash(git commit:*)", "Bash(git push:*)", "Bash(git merge:*)",
-      "Bash(git rebase:*)", "Bash(git reset:*)", "Bash(git stash:*)",
-      "Bash(git tag:*)", "Bash(git cherry-pick:*)",
-      "Bash(git checkout -b:*)", "Bash(git switch -c:*)", "Bash(gh pr:*)",
-      "Edit(tests/**)", "Write(tests/**)"
+      "Bash(git push*)",
+      "Bash(git reset*)",
+      "Bash(git rebase*)",
+      "Bash(git checkout*)",
+      "Bash(git switch*)",
+      "Bash(git stash*)",
+      "Bash(git clean*)",
+      "Bash(git branch -D*)",
+      "Bash(sudo *)",
+      "Edit(tests/**)",
+      "Write(tests/**)",
+      "Edit(CMakeLists.txt)",
+      "Write(CMakeLists.txt)",
+      "Edit(src/engine/*.h)",
+      "Write(src/engine/*.h)",
+      "Edit(src/engine/GameEngine_loop.cpp)",
+      "Write(src/engine/GameEngine_loop.cpp)",
+      "Edit(src/app/**)",
+      "Write(src/app/**)",
+      "Edit(qml/Theme.qml)",
+      "Write(qml/Theme.qml)"
     ]
   }
 }
