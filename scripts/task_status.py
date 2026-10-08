@@ -41,7 +41,7 @@ def build():
                            capture_output=True, text=True, env=env)
         if r.returncode:
             print(r.stdout[-3000:], r.stderr[-3000:]); sys.exit(3)
-    r = subprocess.run(["cmake", "--build", str(BUILD), "--parallel", "4"], capture_output=True, text=True, env=env)
+    r = subprocess.run(["cmake", "--build", str(BUILD), "--parallel", "3"], capture_output=True, text=True, env=env)
     if r.returncode:
         print("BUILD FAILED (fix before anything else):")
         print((r.stdout + r.stderr)[-4000:])
