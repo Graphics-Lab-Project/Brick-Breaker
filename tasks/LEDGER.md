@@ -59,3 +59,8 @@
 - Ruling: OOM crash (63 concurrent cc1plus ~18GB). Coder builds capped at `--parallel 2`, task_status at `--parallel 3` / `ctest -j 4`, dispatch width 4.
 - Ruling: wave-2 engine tasks (G1-G3) dispatched ahead of remaining wave-1 UI tasks (critical path).
 - Known gap: `fonts/` (Silkscreen-Regular/Bold.ttf) does not exist; Main.qml's FontLoaders point to qrc:/fonts/... and fall back to the default font. Fonts can't be downloaded here; add them manually if wanted.
+
+## Level select feature (user request)
+- Ruling: user-authorised edits to frozen files (GameEngine.h, GameEngine_loop.cpp one-line unlock hook, CMake, tests, MockEngine) done by orchestrator before dispatch; coders still never touch them.
+- Main.qml: fullscreen + fit-scale + F11; unlockAll dev switch set true (remove line to ship).
+- L1, L2: dispatched (task-coder, sonnet)

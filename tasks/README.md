@@ -1,6 +1,6 @@
 # Tasks
 
-28 tasks, one spec file each (`tasks/<KEY>.md`). Every task owns different files, so tasks in the
+31 tasks (28 original + 3 level-select tasks, see `docs/LEVEL_SELECT.md`), one spec file each (`tasks/<KEY>.md`). Every task owns different files, so tasks in the
 same wave can run in parallel. Keys: **E** engine module · **U** UI component · **G** engine
 integration · **I** final integration.
 
@@ -41,3 +41,6 @@ integration · **I** final integration.
 | 2 | [U12](U12.md) | UI: Board + Playfield | sonnet | U1, U2, U3 | `tst_playfield` | `qml/Board.qml`, `qml/Playfield.qml` |
 | 3 | [I1](I1.md) | UI: Game screen (composition + input) | sonnet | U4, U5, U9, U10, U11, U12 | `tst_game_screen` | `qml/GameScreen.qml` |
 | 4 | [I2](I2.md) | Integration: AppRoot + Main window + fonts | sonnet | G1, G2, G3, I1, U6, U7, U8 | `tst_app_root` | `qml/AppRoot.qml`, `qml/Main.qml`, `fonts/**` |
+| 1 | [L1](L1.md) | Engine: level select (unlock, progress, startLevel) | sonnet | none | `tst_engine_levels` | `src/engine/GameEngine.cpp` |
+| 1 | [L2](L2.md) | UI: level select screen | sonnet | none | `tst_level_select` | `qml/LevelSelectScreen.qml` |
+| 2 | [L3](L3.md) | UI: menu CONTINUE label and level select wiring | sonnet | L1, L2 | `tst_level_flow` | `qml/MenuScreen.qml`, `qml/AppRoot.qml` |

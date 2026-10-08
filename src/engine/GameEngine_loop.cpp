@@ -215,6 +215,7 @@ void GameEngine::enterLevelCleared()
     m_balls.clear();
     clearTransient();
     syncModels();
+    unlockThrough(m_level + 1);
     emit levelCleared();
 }
 

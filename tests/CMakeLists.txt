@@ -23,6 +23,7 @@ bb_engine_test(tst_models)
 bb_engine_test(tst_engine_core)
 bb_engine_test(tst_engine_balls)
 bb_engine_test(tst_engine_powerups)
+bb_engine_test(tst_engine_levels)
 
 # Qt Quick Test runner shared by every QML test file
 qt_add_executable(bb_qmltest qml_runner.cpp)
@@ -49,3 +50,5 @@ bb_qml_test(tst_fx_layer)
 bb_qml_test(tst_playfield)
 bb_qml_test(tst_game_screen)
 bb_qml_test(tst_app_root)
+bb_qml_test(tst_level_select)
+bb_qml_test(tst_level_flow)

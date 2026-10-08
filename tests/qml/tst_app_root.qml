@@ -39,7 +39,8 @@ TestCase {
     }
     function test_startGame() {
         var t = make()
-        keyClick(Qt.Key_Return)
+        keyClick(Qt.Key_Return)                 // START GAME opens the level select
+        keyClick(Qt.Key_Return)                 // level 1 (the only unlocked one)
         compare(t.e.gameState, 1)
         compare(child(t.r, "gameScreen").visible, true)
         compare(child(t.r, "menuScreen").visible, false)
@@ -72,7 +73,8 @@ TestCase {
     }
     function test_optionsFromPause() {
         var t = make()
-        keyClick(Qt.Key_Return)                 // start -> Ready
+        keyClick(Qt.Key_Return)                 // START GAME -> level select
+        keyClick(Qt.Key_Return)                 // level 1 -> Ready
         keyClick(Qt.Key_P)                      // pause
         compare(t.e.gameState, 3)
         keyClick(Qt.Key_Down)
@@ -85,6 +87,7 @@ TestCase {
     }
     function test_quitToMenuFromPause() {
         var t = make()
+        keyClick(Qt.Key_Return)
         keyClick(Qt.Key_Return)
         keyClick(Qt.Key_P)
         keyClick(Qt.Key_Down)

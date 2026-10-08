@@ -21,6 +21,8 @@ QtObject {
     property bool acceleration: false
     property var highScores: []
     property bool highScorePending: false
+    property int unlockedLevel: 1
+    property bool hasProgress: false
 
     property ListModel bricks: ListModel {}
     property ListModel balls: ListModel { ListElement { x: 168; y: 319 } }
@@ -47,6 +49,7 @@ QtObject {
     function clearCalls() { calls = [] }
 
     function startGame() { record("startGame") }
+    function startLevel(level) { record("startLevel:" + level) }
     function launchOrFire() { record("launchOrFire") }
     function togglePause() { record("togglePause") }
     function quitToMenu() { record("quitToMenu") }

@@ -57,6 +57,13 @@ class GameEngine : public QObject {
     Q_PROPERTY(bool acceleration READ acceleration NOTIFY accelerationChanged)
     Q_PROPERTY(QVariantList highScores READ highScores NOTIFY highScoresChanged)
     Q_PROPERTY(bool highScorePending READ highScorePending NOTIFY highScorePendingChanged)
+    // Level select (docs/LEVEL_SELECT.md). Highest level the player may start, 1..K::LevelCount.
+    // Always K::LevelCount while unlockAll is true. Persisted.
+    Q_PROPERTY(int unlockedLevel READ unlockedLevel NOTIFY unlockedLevelChanged)
+    // false until the first level has been started (menu shows START GAME, afterwards CONTINUE). Persisted.
+    Q_PROPERTY(bool hasProgress READ hasProgress NOTIFY hasProgressChanged)
+    // DEV switch: treat every level as unlocked. Not persisted, default false.
+    Q_PROPERTY(bool unlockAll READ unlockAll WRITE setUnlockAll NOTIFY unlockAllChanged)
     // "" = no persistence (default, used by tests), "native" = QSettings(org, app),
     // anything else = path of an INI file. Setting it reloads persistent data.
     Q_PROPERTY(QString storagePath READ storagePath WRITE setStoragePath NOTIFY storagePathChanged)
@@ -91,9 +98,18 @@ public:
     QString storagePath() const;
     void setStoragePath(const QString &path);
 
+    // ---- level select: task "Engine level select" (GameEngine.cpp) ----
+    int unlockedLevel() const;
+    bool hasProgress() const;
+    bool unlockAll() const;
+    void setUnlockAll(bool on);
+
     // ---- QML invokables: task "Engine core" (GameEngine.cpp) ----
     // All of them update properties/models immediately (no tick needed).
     Q_INVOKABLE void startGame();            // Menu|GameOver -> Ready; score 0, lives 3, level 1, round 1, level 1 loaded, ball on paddle
+    // Menu|GameOver -> Ready like startGame(), but at `level` (round 1, score 0, lives 3). Ignored when
+    // level < 1, level > K::LevelCount or level > unlockedLevel(). Sets hasProgress and saves.
+    Q_INVOKABLE void startLevel(int level);
     Q_INVOKABLE void launchOrFire();         // Ready -> Playing (launch); Playing -> fireWeapon()
     Q_INVOKABLE void togglePause();          // Ready|Playing <-> Paused
     Q_INVOKABLE void quitToMenu();           // any -> Menu; balls/capsules/projectiles cleared
@@ -149,6 +165,9 @@ signals:
     void highScoresChanged();
     void highScorePendingChanged();
     void storagePathChanged();
+    void unlockedLevelChanged();
+    void hasProgressChanged();
+    void unlockAllChanged();
 
     // gameplay events (the motion layer listens to these)
     void brickHit(int row, int col, int hitsLeft, bool unbreakable);
@@ -170,6 +189,9 @@ private:
     void stepStateTimers(qreal h);    // LevelCleared countdown -> next level
     void loadPersistentData();        // paddleSpeed, acceleration, high scores (defaults if absent)
     void savePersistentData();
+    // Raise the stored unlocked level to min(level, K::LevelCount) (never lowers it); emits
+    // unlockedLevelChanged when the effective value moves; saves. Called by enterLevelCleared().
+    void unlockThrough(int level);
 
     // ---- task "Engine ball step" (GameEngine_balls.cpp) ----
     void stepBalls(qreal h);
@@ -223,6 +245,9 @@ private:
     qreal m_accumulator = 0;
     qreal m_levelClearTimer = 0;
     QString m_storagePath;
+    int m_unlockedLevel = 1;
+    bool m_hasProgress = false;
+    bool m_unlockAll = false;
 
     BrickModel *m_brickModel = nullptr;
     BallModel *m_ballModel = nullptr;

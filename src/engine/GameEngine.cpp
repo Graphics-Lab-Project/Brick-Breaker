@@ -27,6 +27,14 @@ void GameEngine::startGame()
     syncModels();
 }
 
+// ---- level select: Phase 0 stubs, implemented by task L1 ----
+int GameEngine::unlockedLevel() const { return 1; }
+bool GameEngine::hasProgress() const { return false; }
+bool GameEngine::unlockAll() const { return false; }
+void GameEngine::setUnlockAll(bool) {}
+void GameEngine::startLevel(int) {}
+void GameEngine::unlockThrough(int) {}
+
 void GameEngine::launchOrFire()
 {
     if (m_fsm.state() == GameState::Ready) {

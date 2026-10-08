@@ -40,6 +40,7 @@ set(BB_QML_FILES
     qml/Main.qml
     qml/AppRoot.qml
     qml/MenuScreen.qml
+    qml/LevelSelectScreen.qml
     qml/OptionsScreen.qml
     qml/HelpScreen.qml
     qml/GameScreen.qml
