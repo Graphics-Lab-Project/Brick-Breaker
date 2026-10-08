@@ -67,7 +67,7 @@ constexpr int LaserHitPoints = 10;
 // Lives, levels, wall
 constexpr int   StartLives = 3;
 constexpr int   MaxLives = 9;
-constexpr int   LevelCount = 10;
+constexpr int   LevelCount = 20;
 constexpr qreal LevelClearDelay = 1.5;
 constexpr int   MaxDescentRows = 4;
 

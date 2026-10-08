@@ -8,7 +8,7 @@ import BrickBreaker
 FocusScope {
     id: root
     property int unlockedLevel: 1       // highest playable level
-    property int levelCount: 10
+    property int levelCount: 20
     property int currentIndex: 0        // 0-based; Component.onCompleted / on becoming visible -> unlockedLevel - 1
 
     signal levelChosen(int level)       // 1-based, only ever emitted for unlocked levels

@@ -6,7 +6,7 @@
 using namespace BB;
 
 namespace {
-// Expected layouts (docs/DESIGN_HANDOFF.md section 7). Levels 2-10 are approved placeholders.
+// Expected layouts (docs/LEVEL_SELECT.md, docs/DESIGN_HANDOFF.md section 7): 20 levels, at most 4 silver 'S' each.
 const QList<QStringList> kLevels = {
     {".......", ".11.11.", ".11.21.", ".......", ".21.21.", ".11.11.", ".......", ".12.11.", ".11.11."},
     {".......", "1111111", ".......", "2222222", ".......", "1111111"},
@@ -16,8 +16,18 @@ const QList<QStringList> kLevels = {
     {"...2...", "..121..", ".12221.", "..121..", "...2..."},
     {"2222222", "2.....2", "2.111.2", "2.....2", "2222222"},
     {"3333333", "1111111", "2222222", "1111111"},
-    {".......", ".33333.", "S22122S", "S12321S", "S11111S", "SSS.SSS"},
-    {".......", "1S1S1S1", "2121212", "2S2S2S2", "1111111", ".S.S.S.", "3.3.3.3"},
+    {".......", ".33333.", ".22122.", "S12321S", ".11111.", "S11.11S"},
+    {".......", "1S1.1S1", "2121212", "2S2.2S2", "1111111", ".......", "3.3.3.3"},
+    {".......", ".1...1.", "..111..", ".11111.", "11.1.11", "1222221", "1.111.1", "..1.1.."},
+    {".......", ".11.11.", "1221221", "1223221", ".12221.", "..121..", "...1..."},
+    {".......", "...3...", "..111..", ".11211.", "..111..", ".11211.", "1121211", "...2..."},
+    {".......", "...3...", "..222..", "..212..", "..212..", ".22222.", "1.222.1", "..1.1.."},
+    {".......", "111...S", ".222...", "..111..", "...222.", "..111..", ".222...", "111...S"},
+    {".......", "3333333", ".22222.", "..111..", "...S...", "..111..", ".22222.", "2222222"},
+    {".......", "3.S.S.3", "22.1.22", "2221222", "2221222", ".2.1.2.", "..212.."},
+    {".......", "1111111", "1.....1", "1.222.1", "1.232.1", "1.222.1", "1.....1", "1111111"},
+    {".......", "2.2.2.2", "2222222", "3S3S3S3", "1111111"},
+    {".......", ".22222.", "3333333", "33S3S33", "3333333", ".11111.", ".1.1.1."},
 };
 }
 
@@ -146,26 +156,36 @@ private slots:
     }
     void levels_count()
     {
-        QCOMPARE(Levels::count(), 10);
+        QCOMPARE(Levels::count(), 20);
     }
     void levels_exactLayouts()
     {
-        for (int n = 1; n <= 10; ++n)
+        for (int n = 1; n <= 20; ++n)
             QCOMPARE(Levels::rows(n), kLevels[n - 1]);
     }
     void levels_loop()
     {
-        QCOMPARE(Levels::rows(11), kLevels[0]);
-        QCOMPARE(Levels::rows(20), kLevels[9]);
+        QCOMPARE(Levels::rows(21), kLevels[0]);
+        QCOMPARE(Levels::rows(40), kLevels[19]);
         QCOMPARE(Levels::rows(23), kLevels[2]);
         QCOMPARE(Levels::rows(0), kLevels[0]);
     }
     void levels_allLoad()
     {
-        for (int n = 1; n <= 10; ++n) {
+        for (int n = 1; n <= 20; ++n) {
             BrickGrid g;
             QVERIFY2(g.load(Levels::rows(n)), qPrintable(QString("level %1").arg(n)));
             QVERIFY(g.remainingBreakable() > 0);
+        }
+    }
+    void levels_atMostFourSilver_andFitTheField()
+    {
+        for (int n = 1; n <= 20; ++n) {
+            int silver = 0;
+            for (const QString &row : Levels::rows(n))
+                silver += row.count(QLatin1Char('S'));
+            QVERIFY2(silver <= 4, qPrintable(QString("level %1 has %2 silver").arg(n).arg(silver)));
+            QVERIFY2(Levels::rows(n).size() <= 9, qPrintable(QString("level %1 too tall").arg(n)));
         }
     }
 };

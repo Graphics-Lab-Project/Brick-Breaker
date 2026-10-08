@@ -1,6 +1,6 @@
 # Tasks
 
-31 tasks (28 original + 3 level-select tasks, see `docs/LEVEL_SELECT.md`), one spec file each (`tasks/<KEY>.md`). Every task owns different files, so tasks in the
+33 tasks (28 original + 3 level-select + 2 "20 levels" tasks, see `docs/LEVEL_SELECT.md`), one spec file each (`tasks/<KEY>.md`). Every task owns different files, so tasks in the
 same wave can run in parallel. Keys: **E** engine module · **U** UI component · **G** engine
 integration · **I** final integration.
 
@@ -44,3 +44,5 @@ integration · **I** final integration.
 | 1 | [L1](L1.md) | Engine: level select (unlock, progress, startLevel) | sonnet | none | `tst_engine_levels` | `src/engine/GameEngine.cpp` |
 | 1 | [L2](L2.md) | UI: level select screen | sonnet | none | `tst_level_select` | `qml/LevelSelectScreen.qml` |
 | 2 | [L3](L3.md) | UI: menu CONTINUE label and level select wiring | sonnet | L1, L2 | `tst_level_flow` | `qml/MenuScreen.qml`, `qml/AppRoot.qml` |
+| 1 | [M1](M1.md) | Engine: 20 level layouts (max 4 stones) | haiku | none | `tst_brick_grid` | `src/engine/Levels.cpp` |
+| 1 | [M2](M2.md) | UI: 20-level wiring (banner wrap, list size) | sonnet | none | `tst_overlays` | `qml/LevelBanner.qml`, `qml/AppRoot.qml` |

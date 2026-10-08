@@ -285,11 +285,11 @@ private slots:
         QCOMPARE(e.paddleWidth(), 64);
         QCOMPARE(e.lives(), 5);
     }
-    void level10_loopsAndIncrementsRound()
+    void lastLevel_loopsAndIncrementsRound()
     {
         GameEngine e;
         e.startGame();
-        e.debugSetLevel(10);
+        e.debugSetLevel(K::LevelCount);
         QSignalSpy roundSpy(&e, &GameEngine::roundChanged);
         e.debugEnterLevelCleared();
         advance(e, 1.6);

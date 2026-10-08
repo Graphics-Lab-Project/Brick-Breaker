@@ -57,6 +57,8 @@ class GameEngine : public QObject {
     Q_PROPERTY(bool acceleration READ acceleration NOTIFY accelerationChanged)
     Q_PROPERTY(QVariantList highScores READ highScores NOTIFY highScoresChanged)
     Q_PROPERTY(bool highScorePending READ highScorePending NOTIFY highScorePendingChanged)
+    // Number of levels (K::LevelCount). Constant.
+    Q_PROPERTY(int levelCount READ levelCount CONSTANT)
     // Level select (docs/LEVEL_SELECT.md). Highest level the player may start, 1..K::LevelCount.
     // Always K::LevelCount while unlockAll is true. Persisted.
     Q_PROPERTY(int unlockedLevel READ unlockedLevel NOTIFY unlockedLevelChanged)
@@ -99,6 +101,7 @@ public:
     void setStoragePath(const QString &path);
 
     // ---- level select: task "Engine level select" (GameEngine.cpp) ----
+    int levelCount() const { return K::LevelCount; }
     int unlockedLevel() const;
     bool hasProgress() const;
     bool unlockAll() const;

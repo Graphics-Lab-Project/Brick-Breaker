@@ -86,12 +86,14 @@ TestCase {
         var t = make({ unlockAll: true })
         keyClick(Qt.Key_Return)
         var sel = child(t.r, "levelSelectScreen")
-        compare(sel.unlockedLevel, 10)
+        compare(sel.unlockedLevel, 20)
+        compare(sel.levelCount, 20)
+        child(sel, "levelItem20")                // all 20 rows exist
         for (var i = 0; i < 3; ++i)
             keyClick(Qt.Key_Up)
-        keyClick(Qt.Key_Return)                  // level 7
+        keyClick(Qt.Key_Return)                  // level 17
         compare(t.e.gameState, 1)
-        compare(t.e.level, 7)
+        compare(t.e.level, 17)
         compare(child(t.r, "gameScreen").visible, true)
     }
 }

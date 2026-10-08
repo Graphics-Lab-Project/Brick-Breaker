@@ -178,7 +178,7 @@ All T1 work is gated by `Theme.polish`. With it false the game must look exactly
 
 Note: the T1 Long tween lags the engine's collision width by 150 ms. That is acceptable, but flagged (see open question 15).
 
-## 7. Levels (v1 = 10)
+## 7. Levels (v1 = 10, now 20: see docs/LEVEL_SELECT.md, the canonical list is `tests/engine/tst_brick_grid.cpp`)
 
 Format: one string per row, 7 chars. `.` empty, `1`/`2`/`3` = hits, `S` = silver. Rows start at grid row 0. Level 1 comes from S02. **Levels 2–10 are ASSUMED placeholders** until the original layouts are supplied.
 

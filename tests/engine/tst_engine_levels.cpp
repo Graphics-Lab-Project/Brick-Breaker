@@ -9,6 +9,13 @@ using namespace BB;
 class TstEngineLevels : public QObject {
     Q_OBJECT
 private slots:
+    void levelCount_is20()
+    {
+        GameEngine e;
+        QCOMPARE(K::LevelCount, 20);
+        QCOMPARE(e.levelCount(), 20);
+        QCOMPARE(e.levelCount(), Levels::count());
+    }
     void initialState()
     {
         GameEngine e;
@@ -29,7 +36,7 @@ private slots:
         e.setUnlockAll(true);
         e.startLevel(0);
         QCOMPARE(e.gameState(), int(GameState::Menu));
-        e.startLevel(11);
+        e.startLevel(K::LevelCount + 1);
         QCOMPARE(e.gameState(), int(GameState::Menu));
         e.startLevel(-3);
         QCOMPARE(e.gameState(), int(GameState::Menu));

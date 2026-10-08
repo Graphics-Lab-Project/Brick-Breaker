@@ -20,6 +20,8 @@ TestCase {
         return c
     }
     function make(props) {
+        if (props.levelCount === undefined)
+            props.levelCount = 10               // most tests use a 10-row list; the component is generic
         var m = createTemporaryObject(screenC, stage, props)
         verify(m !== null)
         m.forceActiveFocus()
@@ -142,6 +144,28 @@ TestCase {
         for (var k = 0; k < 9; ++k)
             keyClick(Qt.Key_Up)
         tryCompare(flick, "contentY", 0)
+    }
+    function test_twentyLevels() {
+        var m = make({ unlockedLevel: 14, levelCount: 20 })
+        for (var n = 1; n <= 20; ++n) {
+            compare(item(m, n).level, n)
+            compare(item(m, n).locked, n > 14, "level " + n)
+        }
+        compare(m.currentIndex, 13)
+        var flick = child(m, "levelFlick")
+        tryVerify(function () {
+            var y = item(m, 14).mapToItem(flick, 0, 0).y
+            return y >= -1 && y + item(m, 14).height <= flick.height + 1
+        })
+        var s = spy(m, "levelChosen")
+        keyClick(Qt.Key_Down)                    // level 15 is locked
+        keyClick(Qt.Key_Return)
+        compare(s.count, 0)
+        for (var i = 0; i < 20; ++i)
+            keyClick(Qt.Key_Up)
+        compare(m.currentIndex, 0)
+        keyClick(Qt.Key_Return)
+        compare(s.signalArguments[0][0], 1)
     }
 }
 }

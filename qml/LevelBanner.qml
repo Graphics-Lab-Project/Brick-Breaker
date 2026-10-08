@@ -6,6 +6,7 @@ import BrickBreaker
 Item {
     id: root
     property int level: 1               // the level just cleared
+    property int levelCount: 20         // levels wrap to 1 after this one (K::LevelCount)
     property bool polish: Theme.polish
 
     width: Theme.fieldW

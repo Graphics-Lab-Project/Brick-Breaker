@@ -84,6 +84,8 @@ TestCase {
         compare(child(b, "clearText").text, "CLEAR")
         compare(child(b, "nextText").text, "NEXT LEVEL 02")
         b.level = 10
+        compare(child(b, "nextText").text, "NEXT LEVEL 11")
+        b.level = 20
         compare(child(b, "nextText").text, "NEXT LEVEL 01")
     }
     function test_bannerBarWithoutPolish() {
