@@ -73,3 +73,4 @@
 ## 20 levels (user request)
 - Ruling: LevelCount 10 -> 20; max 4 stones per level (L9: 12 -> 4, L10: 9 -> 4); new layouts 11-20 per docs/LEVEL_SELECT.md. Frozen files (Constants.h, GameEngine.h, tests, MockEngine) edited by orchestrator on user instruction.
 - M1, M2: dispatched
+- M1, M2: complete (see git log). 33/33 tests green, 20 levels, max 4 stones.
