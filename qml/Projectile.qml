@@ -7,4 +7,14 @@ import BrickBreaker
 Item {
     id: root
     property int kind: 0                // Theme.projectileBullet / projectileLaser
+
+    width: 2
+    height: kind === Theme.projectileLaser ? 10 : 6
+
+    Rectangle {
+        id: body
+        objectName: "body"
+        anchors.fill: parent
+        color: root.kind === Theme.projectileLaser ? Theme.capLaser : Theme.capGun
+    }
 }
