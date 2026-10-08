@@ -1,5 +1,3 @@
-// OWNER: task "HUD + pause button". Phase 0 stub: interface FROZEN (properties, signals, functions below);
-// implement the body. Spec: the task issue + docs/DESIGN_HANDOFF.md. Use 'component X: ...' for helpers.
 import QtQuick
 import BrickBreaker
 
@@ -9,4 +7,21 @@ Item {
     signal clicked()
     width: 24
     height: 20
+
+    Rectangle {
+        objectName: "bar0"
+        x: 6; y: 3
+        width: 4; height: 14
+        color: Theme.text
+    }
+    Rectangle {
+        objectName: "bar1"
+        x: 14; y: 3
+        width: 4; height: 14
+        color: Theme.text
+    }
+    MouseArea {
+        anchors.fill: parent
+        onClicked: root.clicked()
+    }
 }
