@@ -58,7 +58,7 @@ Item {
         objectName: "nextText"
         y: 194
         anchors.horizontalCenter: parent.horizontalCenter
-        text: "NEXT LEVEL " + Theme.pad(root.level % 10 + 1, 2)
+        text: "NEXT LEVEL " + Theme.pad(root.level % root.levelCount + 1, 2)
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontM
         color: Theme.textDim
