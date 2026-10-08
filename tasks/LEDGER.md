@@ -64,3 +64,8 @@
 - Ruling: user-authorised edits to frozen files (GameEngine.h, GameEngine_loop.cpp one-line unlock hook, CMake, tests, MockEngine) done by orchestrator before dispatch; coders still never touch them.
 - Main.qml: fullscreen + fit-scale + F11; unlockAll dev switch set true (remove line to ship).
 - L1, L2: dispatched (task-coder, sonnet)
+- L2: complete (swept into 797bcbb, test tst_level_select passes)
+- L1: complete (see git log)
+- L3: dispatched (task-coder, sonnet)
+- L3: complete (see git log)
+- Level select feature done: 31/31.
