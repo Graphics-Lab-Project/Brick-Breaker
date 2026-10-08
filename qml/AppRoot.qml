@@ -5,7 +5,7 @@ import BrickBreaker
 FocusScope {
     id: root
     property var engine: null
-    property string screen: "menu"      // "menu" | "options" | "help"
+    property string screen: "menu"      // "menu" | "options" | "help" | "levels"
 
     width: Theme.canvasW
     height: Theme.canvasH
@@ -20,7 +20,8 @@ FocusScope {
         visible: root.screen === "menu" && !root.inGame
         focus: visible
         bestScore: root.engine ? root.engine.bestScore : 0
-        onStartGame: { if (root.engine) root.engine.startGame() }
+        hasProgress: root.engine ? root.engine.hasProgress : false
+        onStartGame: root.screen = "levels"
         onOpenOptions: root.screen = "options"
         onOpenHelp: root.screen = "help"
         onQuit: Qt.quit()
@@ -52,6 +53,19 @@ FocusScope {
         id: helpScreen
         visible: root.screen === "help"
         focus: visible
+        onBack: root.screen = "menu"
+    }
+
+    LevelSelectScreen {
+        objectName: "levelSelectScreen"
+        id: levelSelectScreen
+        visible: root.screen === "levels"
+        focus: visible
+        unlockedLevel: root.engine ? root.engine.unlockedLevel : 1
+        onLevelChosen: (level) => {
+            if (root.engine) root.engine.startLevel(level)
+            root.screen = "menu"
+        }
         onBack: root.screen = "menu"
     }
 }

@@ -9,6 +9,7 @@ FocusScope {
     id: root
     property int bestScore: 0
     property int currentIndex: 0
+    property bool hasProgress: false
 
     signal startGame()
     signal openOptions()
@@ -87,7 +88,7 @@ FocusScope {
         spacing: 12
         MenuItem {
             objectName: "itemStart"
-            label: "START GAME"
+            label: root.hasProgress ? "CONTINUE" : "START GAME"
             selected: root.currentIndex === 0
             onClicked: { root.currentIndex = 0; root.activate(0) }
         }
