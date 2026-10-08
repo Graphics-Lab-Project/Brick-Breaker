@@ -15,6 +15,47 @@ Item {
     width: Theme.brickW
     height: Theme.brickH
 
+    visible: alive
+
+    property real squash: 0
+
+    Rectangle {
+        id: face
+        objectName: "face"
+        width: parent.width
+        height: parent.height - root.squash
+        anchors.verticalCenter: parent.verticalCenter
+        color: root.unbreakable ? Theme.silverFace
+             : root.hitsLeft >= 3 ? Theme.brickAmber
+             : root.hitsLeft === 2 ? Theme.brickRed
+             : Theme.brickRedDeep
+        border.width: root.unbreakable ? 1 : (root.hitsLeft === 1 ? 1 : 0)
+        border.color: root.unbreakable ? Theme.silverHi : Theme.brickRed
+
+        Rectangle {
+            id: hitFlash
+            objectName: "hitFlash"
+            anchors.fill: parent
+            color: "white"
+            opacity: 0
+        }
+    }
+
+    ParallelAnimation {
+        id: flashAnim
+        NumberAnimation { target: hitFlash; property: "opacity"; from: 1; to: 0; duration: 60; easing.type: Easing.Linear }
+        SequentialAnimation {
+            NumberAnimation { target: root; property: "squash"; to: 2; duration: 30 }
+            NumberAnimation { target: root; property: "squash"; to: 0; duration: 30 }
+        }
+    }
+
     // T1 hit flash (no-op when polish is false)
-    function flash() {}
+    function flash() {
+        if (!polish)
+            return
+        flashAnim.stop()
+        hitFlash.opacity = 1
+        flashAnim.restart()
+    }
 }
