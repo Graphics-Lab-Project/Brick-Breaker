@@ -24,6 +24,8 @@ bb_engine_test(tst_engine_core)
 bb_engine_test(tst_engine_balls)
 bb_engine_test(tst_engine_powerups)
 bb_engine_test(tst_engine_levels)
+bb_engine_test(tst_score_store)
+bb_engine_test(tst_engine_scores)
 
 # Qt Quick Test runner shared by every QML test file
 qt_add_executable(bb_qmltest qml_runner.cpp)

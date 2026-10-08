@@ -167,5 +167,39 @@ TestCase {
         keyClick(Qt.Key_Return)
         compare(s.signalArguments[0][0], 1)
     }
+    function test_formatTime() {
+        var m = make({})
+        compare(m.formatTime(0), "0:00.000000")
+        compare(m.formatTime(42318457), "0:42.318457")
+        compare(m.formatTime(61500000), "1:01.500000")
+        compare(m.formatTime(8333), "0:00.008333")
+        compare(m.formatTime(3600000001), "60:00.000001")
+    }
+    function test_bestsShownOnClearedLevels() {
+        var m = make({ unlockedLevel: 4, bests: [
+            { bestScore: 1240, bestTimeMicros: 42318457, clears: 2 },
+            { bestScore: 0, bestTimeMicros: 0, clears: 0 },
+            { bestScore: 90, bestTimeMicros: 61500000, clears: 1 }
+        ] })
+        var one = item(m, 1)
+        compare(child(one, "bestText").visible, true)
+        compare(child(one, "bestText").text, "BEST 01240")
+        compare(child(one, "timeText").visible, true)
+        compare(child(one, "timeText").text, "0:42.318457")
+        compare(child(item(m, 2), "bestText").visible, false)       // never cleared
+        compare(child(item(m, 2), "timeText").visible, false)
+        compare(child(item(m, 3), "bestText").text, "BEST 00090")
+        compare(child(item(m, 3), "timeText").text, "1:01.500000")
+        compare(child(item(m, 4), "bestText").visible, false)       // unlocked, list too short
+        compare(child(item(m, 5), "bestText").visible, false)       // locked: shows LOCKED only
+        compare(child(item(m, 5), "lockText").visible, true)
+    }
+    function test_bestsUpdateLive() {
+        var m = make({ unlockedLevel: 2 })
+        compare(child(item(m, 1), "bestText").visible, false)
+        m.bests = [{ bestScore: 5, bestTimeMicros: 1000000, clears: 1 }]
+        compare(child(item(m, 1), "bestText").visible, true)
+        compare(child(item(m, 1), "timeText").text, "0:01.000000")
+    }
 }
 }

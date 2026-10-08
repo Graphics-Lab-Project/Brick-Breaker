@@ -22,6 +22,7 @@ QtObject {
     property var highScores: []
     property bool highScorePending: false
     property int levelCount: 20
+    property var levelBests: []
     property int unlockedLevel: 1
     property bool hasProgress: false
 

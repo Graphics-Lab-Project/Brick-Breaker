@@ -1,6 +1,6 @@
 # Tasks
 
-33 tasks (28 original + 3 level-select + 2 "20 levels" tasks, see `docs/LEVEL_SELECT.md`), one spec file each (`tasks/<KEY>.md`). Every task owns different files, so tasks in the
+36 tasks (28 original + 3 level-select + 2 "20 levels" tasks + 3 score-persistence tasks (S1-S3, `docs/PERSISTENCE.md`), see `docs/LEVEL_SELECT.md`), one spec file each (`tasks/<KEY>.md`). Every task owns different files, so tasks in the
 same wave can run in parallel. Keys: **E** engine module · **U** UI component · **G** engine
 integration · **I** final integration.
 
@@ -46,3 +46,6 @@ integration · **I** final integration.
 | 2 | [L3](L3.md) | UI: menu CONTINUE label and level select wiring | sonnet | L1, L2 | `tst_level_flow` | `qml/MenuScreen.qml`, `qml/AppRoot.qml` |
 | 1 | [M1](M1.md) | Engine: 20 level layouts (max 4 stones) | haiku | none | `tst_brick_grid` | `src/engine/Levels.cpp` |
 | 1 | [M2](M2.md) | UI: 20-level wiring (banner wrap, list size) | sonnet | none | `tst_overlays` | `qml/LevelBanner.qml`, `qml/AppRoot.qml` |
+| 1 | [S1](S1.md) | Engine: SQLite score store | sonnet | none | `tst_score_store` | `src/engine/SqliteScoreStore.cpp` |
+| 2 | [S2](S2.md) | Engine: score persistence in the engine | sonnet | S1 | `tst_engine_scores` | `src/engine/GameEngine.cpp` |
+| 1 | [S3](S3.md) | UI: personal bests on the level select | sonnet | none | `tst_level_select` | `qml/LevelSelectScreen.qml`, `qml/AppRoot.qml` |

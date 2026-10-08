@@ -4,11 +4,15 @@ import QtQuick
 import BrickBreaker
 
 // 360 x 480. Required children: "levelFlick" (Flickable), "levelItem1".."levelItem10" (each with
-// `int level`, `bool locked`, `bool selected`; locked items also show a Text "lockText"), "backButton".
+// `int level`, `bool locked`, `bool selected`; locked items also show a Text "lockText"; unlocked items with a
+// recorded best show Texts "bestText" and "timeText"), "backButton".
 FocusScope {
     id: root
     property int unlockedLevel: 1       // highest playable level
     property int levelCount: 20
+    // Personal bests, index 0 = level 1: [{ bestScore, bestTimeMicros, clears }, ...] (engine.levelBests).
+    // Missing / shorter list / clears === 0 -> no best shown for that level.
+    property var bests: []
     property int currentIndex: 0        // 0-based; Component.onCompleted / on becoming visible -> unlockedLevel - 1
 
     signal levelChosen(int level)       // 1-based, only ever emitted for unlocked levels
@@ -19,6 +23,9 @@ FocusScope {
 
     readonly property int rowH: 40
     readonly property int rowGap: 6
+
+    // microseconds -> "M:SS.uuuuuu" (minutes unbounded), e.g. 42318457 -> "0:42.318457"
+    function formatTime(us) { return "" }
 
     function activate(i) {
         if (i >= 0 && i < levelCount && i + 1 <= unlockedLevel)

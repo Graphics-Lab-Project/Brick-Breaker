@@ -67,6 +67,19 @@ void GameEngine::unlockThrough(int level)
     savePersistentData();
 }
 
+// ---- score persistence: Phase 0 stubs, implemented by task S2 ----
+qint64 GameEngine::runTimeMicros() const { return 0; }
+qint64 GameEngine::levelTimeMicros() const { return 0; }
+QVariantMap GameEngine::levelBest(int) const { return {}; }
+QVariantList GameEngine::levelScores(int, int) const { return {}; }
+QVariantList GameEngine::levelTimes(int, int) const { return {}; }
+QVariantList GameEngine::runScores(int) const { return {}; }
+QVariantList GameEngine::levelBests() const { return {}; }
+void GameEngine::setScoreStore(std::unique_ptr<ScoreStore>) {}
+void GameEngine::recordLevelClear() {}
+void GameEngine::recordRun() {}
+void GameEngine::refreshLevelBests() {}
+
 void GameEngine::launchOrFire()
 {
     if (m_fsm.state() == GameState::Ready) {

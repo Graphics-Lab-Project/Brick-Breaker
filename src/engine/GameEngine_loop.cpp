@@ -75,6 +75,10 @@ void GameEngine::tick(qreal dt)
 
 void GameEngine::step(qreal h)
 {
+    if (m_fsm.state() == GameState::Playing) {
+        ++m_runPlaySteps;
+        ++m_levelPlaySteps;
+    }
     stepInput(h);
     stepStateTimers(h);
     if (m_fsm.state() == GameState::Playing) {
@@ -194,6 +198,8 @@ void GameEngine::loadRows(const QStringList &rows)
 
 void GameEngine::loadLevel(int levelNumber)
 {
+    m_levelPlaySteps = 0;
+    m_levelStartScore = m_score;
     loadRows(Levels::rows(levelNumber));
 }
 
@@ -216,6 +222,7 @@ void GameEngine::enterLevelCleared()
     clearTransient();
     syncModels();
     unlockThrough(m_level + 1);
+    recordLevelClear();
     emit levelCleared();
 }
 
@@ -230,6 +237,7 @@ void GameEngine::enterGameOver()
         emit highScorePendingChanged();
     }
     syncModels();
+    recordRun();
     emit gameOver();
 }
 

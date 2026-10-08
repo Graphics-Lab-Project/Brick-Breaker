@@ -6,7 +6,7 @@ project(BrickBreaker VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Qml Quick QuickTest Test)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Qml Quick QuickTest Test Sql)
 qt_standard_project_setup()
 
 # ---------------------------------------------------------------------------
@@ -27,6 +27,8 @@ set(BB_ENGINE_SOURCES
     src/engine/PaceController.h     src/engine/PaceController.cpp
     src/engine/GameStateMachine.h   src/engine/GameStateMachine.cpp
     src/engine/HighScoreTable.h     src/engine/HighScoreTable.cpp
+    src/engine/ScoreStore.h
+    src/engine/SqliteScoreStore.h   src/engine/SqliteScoreStore.cpp
     src/engine/Models.h             src/engine/Models.cpp
     src/engine/GameEngine.h
     src/engine/GameEngine_loop.cpp
@@ -77,7 +79,7 @@ qt_add_qml_module(bbcore
     QML_FILES ${BB_QML_FILES}
 )
 target_include_directories(bbcore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/engine)
-target_link_libraries(bbcore PUBLIC Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick)
+target_link_libraries(bbcore PUBLIC Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::Sql)
 
 # Optional bundled fonts (Silkscreen, OFL). Added by the integration task; the build works without them.
 file(GLOB BB_FONT_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/fonts/*.ttf")

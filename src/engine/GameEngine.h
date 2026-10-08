@@ -19,6 +19,7 @@
 #include "PaddleLogic.h"
 #include "PowerUps.h"
 #include "Rng.h"
+#include "ScoreStore.h"
 #include "Types.h"
 #include "WeaponSystem.h"
 
@@ -59,6 +60,10 @@ class GameEngine : public QObject {
     Q_PROPERTY(bool highScorePending READ highScorePending NOTIFY highScorePendingChanged)
     // Number of levels (K::LevelCount). Constant.
     Q_PROPERTY(int levelCount READ levelCount CONSTANT)
+    // Score persistence (docs/PERSISTENCE.md). One entry per level (index 0 = level 1):
+    // { "bestScore": int, "bestTimeMicros": qint64 (0 = never cleared), "clears": int }. Empty-valued entries
+    // when there is no store. Emits levelBestsChanged when a store is attached and after every level clear.
+    Q_PROPERTY(QVariantList levelBests READ levelBests NOTIFY levelBestsChanged)
     // Level select (docs/LEVEL_SELECT.md). Highest level the player may start, 1..K::LevelCount.
     // Always K::LevelCount while unlockAll is true. Persisted.
     Q_PROPERTY(int unlockedLevel READ unlockedLevel NOTIFY unlockedLevelChanged)
@@ -102,6 +107,11 @@ public:
 
     // ---- level select: task "Engine level select" (GameEngine.cpp) ----
     int levelCount() const { return K::LevelCount; }
+    QVariantList levelBests() const;
+    // Replaces the score store (tests, or a future remote store). Takes ownership; nullptr = no persistence.
+    // Emits levelBestsChanged. setStoragePath() installs a SqliteScoreStore itself (see docs/PERSISTENCE.md).
+    void setScoreStore(std::unique_ptr<ScoreStore> store);
+    ScoreStore *scoreStore() const { return m_scoreStore.get(); }
     int unlockedLevel() const;
     bool hasProgress() const;
     bool unlockAll() const;
@@ -113,6 +123,17 @@ public:
     // Menu|GameOver -> Ready like startGame(), but at `level` (round 1, score 0, lives 3). Ignored when
     // level < 1, level > K::LevelCount or level > unlockedLevel(). Sets hasProgress and saves.
     Q_INVOKABLE void startLevel(int level);
+    // ---- score persistence: task "Engine score persistence" (GameEngine.cpp) ----
+    // Play time in microseconds (stepsToMicros of the Playing-state steps) of the current run / level.
+    Q_INVOKABLE qint64 runTimeMicros() const;
+    Q_INVOKABLE qint64 levelTimeMicros() const;
+    // {} -> zeros when level is out of range or there is no store.  levelBest: see levelBests.
+    Q_INVOKABLE QVariantMap levelBest(int level) const;
+    // [{ "level","round","score","timeMicros","initials","at" (ISO string) }, ...] best score first / fastest first.
+    Q_INVOKABLE QVariantList levelScores(int level, int limit = 5) const;
+    Q_INVOKABLE QVariantList levelTimes(int level, int limit = 5) const;
+    // [{ "initials","score","level","round","timeMicros","at" }, ...] best first.
+    Q_INVOKABLE QVariantList runScores(int limit = 10) const;
     Q_INVOKABLE void launchOrFire();         // Ready -> Playing (launch); Playing -> fireWeapon()
     Q_INVOKABLE void togglePause();          // Ready|Playing <-> Paused
     Q_INVOKABLE void quitToMenu();           // any -> Menu; balls/capsules/projectiles cleared
@@ -171,6 +192,7 @@ signals:
     void unlockedLevelChanged();
     void hasProgressChanged();
     void unlockAllChanged();
+    void levelBestsChanged();
 
     // gameplay events (the motion layer listens to these)
     void brickHit(int row, int col, int hitsLeft, bool unbreakable);
@@ -195,6 +217,11 @@ private:
     // Raise the stored unlocked level to min(level, K::LevelCount) (never lowers it); emits
     // unlockedLevelChanged when the effective value moves; saves. Called by enterLevelCleared().
     void unlockThrough(int level);
+    // Called from enterLevelCleared() / enterGameOver() (GameEngine_loop.cpp). No-ops without a store,
+    // except that nothing is ever thrown away: the step counters always run.
+    void recordLevelClear();          // LevelClearRecord{level, round, score - m_levelStartScore, levelTime}, refresh bests
+    void recordRun();                 // RunRecord{initials "", score, level, round, runTime}; remembers its id
+    void refreshLevelBests();         // rebuild the cache from the store, emit levelBestsChanged
 
     // ---- task "Engine ball step" (GameEngine_balls.cpp) ----
     void stepBalls(qreal h);
@@ -251,6 +278,12 @@ private:
     int m_unlockedLevel = 1;
     bool m_hasProgress = false;
     bool m_unlockAll = false;
+    std::unique_ptr<ScoreStore> m_scoreStore;
+    QVariantList m_levelBests;
+    qint64 m_runPlaySteps = 0;       // steps taken while Playing, whole run (reset by startLevel)
+    qint64 m_levelPlaySteps = 0;     // same, current level (reset by loadLevel)
+    int m_levelStartScore = 0;       // m_score when the level was loaded (set by loadLevel)
+    qint64 m_currentRunId = 0;       // RunRecord id of the finished run, for submitInitials(); 0 = none
 
     BrickModel *m_brickModel = nullptr;
     BallModel *m_ballModel = nullptr;
