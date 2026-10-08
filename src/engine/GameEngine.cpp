@@ -6,34 +6,66 @@ namespace BB {
 namespace {
 const QString kPaddleSpeedKey = QStringLiteral("paddleSpeed");
 const QString kAccelerationKey = QStringLiteral("acceleration");
+const QString kUnlockedLevelKey = QStringLiteral("unlockedLevel");
+const QString kHasProgressKey = QStringLiteral("hasProgress");
 }
 
 void GameEngine::startGame()
 {
+    startLevel(1);
+}
+
+void GameEngine::startLevel(int level)
+{
+    if (level < 1 || level > K::LevelCount || level > unlockedLevel())
+        return;
     if (!applyEvent(GameEvent::StartGame))
         return;
     m_power = PowerState();
     syncPower();
     setScoreValue(0);
-    setLevelNumber(1);
+    setLevelNumber(level);
     setRoundNumber(1);
     if (m_highScorePending) {
         m_highScorePending = false;
         emit highScorePendingChanged();
     }
     m_paddle.reset();
-    loadLevel(1);
+    loadLevel(level);
     placeBallOnPaddle();
     syncModels();
+    if (!m_hasProgress) {
+        m_hasProgress = true;
+        emit hasProgressChanged();
+    }
+    savePersistentData();
 }
 
-// ---- level select: Phase 0 stubs, implemented by task L1 ----
-int GameEngine::unlockedLevel() const { return 1; }
-bool GameEngine::hasProgress() const { return false; }
-bool GameEngine::unlockAll() const { return false; }
-void GameEngine::setUnlockAll(bool) {}
-void GameEngine::startLevel(int) {}
-void GameEngine::unlockThrough(int) {}
+int GameEngine::unlockedLevel() const { return m_unlockAll ? K::LevelCount : m_unlockedLevel; }
+bool GameEngine::hasProgress() const { return m_hasProgress; }
+bool GameEngine::unlockAll() const { return m_unlockAll; }
+
+void GameEngine::setUnlockAll(bool on)
+{
+    if (on == m_unlockAll)
+        return;
+    const int before = unlockedLevel();
+    m_unlockAll = on;
+    emit unlockAllChanged();
+    if (unlockedLevel() != before)
+        emit unlockedLevelChanged();
+}
+
+void GameEngine::unlockThrough(int level)
+{
+    level = qMin(level, K::LevelCount);
+    const int before = unlockedLevel();
+    if (level > m_unlockedLevel)
+        m_unlockedLevel = level;
+    if (unlockedLevel() != before)
+        emit unlockedLevelChanged();
+    savePersistentData();
+}
 
 void GameEngine::launchOrFire()
 {
@@ -171,6 +203,15 @@ void GameEngine::loadPersistentData()
         m_paddle.setAcceleration(accel);
         emit accelerationChanged();
     }
+    const int before = unlockedLevel();
+    m_unlockedLevel = qBound(1, s->value(kUnlockedLevelKey, 1).toInt(), K::LevelCount);
+    if (unlockedLevel() != before)
+        emit unlockedLevelChanged();
+    const bool progress = s->value(kHasProgressKey, false).toBool();
+    if (progress != m_hasProgress) {
+        m_hasProgress = progress;
+        emit hasProgressChanged();
+    }
     m_highScores.load(*s);
 }
 
@@ -181,6 +222,8 @@ void GameEngine::savePersistentData()
         return;
     s->setValue(kPaddleSpeedKey, m_paddle.speedSetting());
     s->setValue(kAccelerationKey, m_paddle.acceleration());
+    s->setValue(kUnlockedLevelKey, m_unlockedLevel);
+    s->setValue(kHasProgressKey, m_hasProgress);
     m_highScores.save(*s);
     s->sync();
 }
