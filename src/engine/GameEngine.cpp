@@ -1,5 +1,9 @@
 // OWNER: task "Engine core". Invokables, input step, level-clear timer, persistence.
 #include "GameEngine.h"
+#include "SqliteScoreStore.h"
+
+#include <QDateTime>
+#include <QStandardPaths>
 
 namespace BB {
 
@@ -23,6 +27,8 @@ void GameEngine::startLevel(int level)
         return;
     m_power = PowerState();
     syncPower();
+    m_runPlaySteps = 0;
+    m_currentRunId = 0;
     setScoreValue(0);
     setLevelNumber(level);
     setRoundNumber(1);
@@ -67,18 +73,138 @@ void GameEngine::unlockThrough(int level)
     savePersistentData();
 }
 
-// ---- score persistence: Phase 0 stubs, implemented by task S2 ----
-qint64 GameEngine::runTimeMicros() const { return 0; }
-qint64 GameEngine::levelTimeMicros() const { return 0; }
-QVariantMap GameEngine::levelBest(int) const { return {}; }
-QVariantList GameEngine::levelScores(int, int) const { return {}; }
-QVariantList GameEngine::levelTimes(int, int) const { return {}; }
-QVariantList GameEngine::runScores(int) const { return {}; }
-QVariantList GameEngine::levelBests() const { return {}; }
-void GameEngine::setScoreStore(std::unique_ptr<ScoreStore>) {}
-void GameEngine::recordLevelClear() {}
-void GameEngine::recordRun() {}
-void GameEngine::refreshLevelBests() {}
+// ---- score persistence ----
+namespace {
+QVariantMap bestToMap(const LevelBest &b)
+{
+    QVariantMap m;
+    m.insert(QStringLiteral("bestScore"), b.bestScore);
+    m.insert(QStringLiteral("bestTimeMicros"), b.bestTimeMicros);
+    m.insert(QStringLiteral("clears"), b.clears);
+    return m;
+}
+
+QVariantMap levelClearToMap(const LevelClearRecord &r)
+{
+    QVariantMap m;
+    m.insert(QStringLiteral("level"), r.level);
+    m.insert(QStringLiteral("round"), r.round);
+    m.insert(QStringLiteral("score"), r.score);
+    m.insert(QStringLiteral("timeMicros"), r.timeMicros);
+    m.insert(QStringLiteral("initials"), r.initials);
+    m.insert(QStringLiteral("at"), r.atUtc.toString(Qt::ISODateWithMs));
+    return m;
+}
+
+QVariantMap runToMap(const RunRecord &r)
+{
+    QVariantMap m;
+    m.insert(QStringLiteral("initials"), r.initials);
+    m.insert(QStringLiteral("score"), r.score);
+    m.insert(QStringLiteral("level"), r.level);
+    m.insert(QStringLiteral("round"), r.round);
+    m.insert(QStringLiteral("timeMicros"), r.timeMicros);
+    m.insert(QStringLiteral("at"), r.atUtc.toString(Qt::ISODateWithMs));
+    return m;
+}
+}
+
+qint64 GameEngine::runTimeMicros() const { return stepsToMicros(m_runPlaySteps); }
+qint64 GameEngine::levelTimeMicros() const { return stepsToMicros(m_levelPlaySteps); }
+
+QVariantMap GameEngine::levelBest(int level) const
+{
+    if (!m_scoreStore || level < 1 || level > K::LevelCount)
+        return bestToMap(LevelBest());
+    return bestToMap(m_scoreStore->levelBest(level));
+}
+
+QVariantList GameEngine::levelScores(int level, int limit) const
+{
+    QVariantList out;
+    if (!m_scoreStore || level < 1 || level > K::LevelCount)
+        return out;
+    const auto rows = m_scoreStore->topLevelScores(level, limit);
+    for (const auto &r : rows)
+        out.append(levelClearToMap(r));
+    return out;
+}
+
+QVariantList GameEngine::levelTimes(int level, int limit) const
+{
+    QVariantList out;
+    if (!m_scoreStore || level < 1 || level > K::LevelCount)
+        return out;
+    const auto rows = m_scoreStore->fastestLevelTimes(level, limit);
+    for (const auto &r : rows)
+        out.append(levelClearToMap(r));
+    return out;
+}
+
+QVariantList GameEngine::runScores(int limit) const
+{
+    QVariantList out;
+    if (!m_scoreStore)
+        return out;
+    const auto rows = m_scoreStore->topRuns(limit);
+    for (const auto &r : rows)
+        out.append(runToMap(r));
+    return out;
+}
+
+QVariantList GameEngine::levelBests() const
+{
+    if (m_levelBests.size() == K::LevelCount)
+        return m_levelBests;
+    QVariantList out;
+    for (int i = 1; i <= K::LevelCount; ++i)
+        out.append(levelBest(i));
+    return out;
+}
+
+void GameEngine::setScoreStore(std::unique_ptr<ScoreStore> store)
+{
+    m_scoreStore = std::move(store);
+    refreshLevelBests();
+}
+
+void GameEngine::recordLevelClear()
+{
+    if (!m_scoreStore)
+        return;
+    LevelClearRecord r;
+    r.level = m_level;
+    r.round = m_round;
+    r.score = qMax(0, m_score - m_levelStartScore);
+    r.timeMicros = levelTimeMicros();
+    r.atUtc = QDateTime::currentDateTimeUtc();
+    m_scoreStore->addLevelClear(r);
+    refreshLevelBests();
+}
+
+void GameEngine::recordRun()
+{
+    if (!m_scoreStore) {
+        m_currentRunId = 0;
+        return;
+    }
+    RunRecord r;
+    r.score = m_score;
+    r.level = m_level;
+    r.round = m_round;
+    r.timeMicros = runTimeMicros();
+    r.atUtc = QDateTime::currentDateTimeUtc();
+    m_currentRunId = m_scoreStore->addRun(r);
+}
+
+void GameEngine::refreshLevelBests()
+{
+    QVariantList out;
+    for (int i = 1; i <= K::LevelCount; ++i)
+        out.append(levelBest(i));
+    m_levelBests = out;
+    emit levelBestsChanged();
+}
 
 void GameEngine::launchOrFire()
 {
@@ -162,6 +288,8 @@ void GameEngine::submitInitials(const QString &initials)
     m_highScorePending = false;
     emit highScorePendingChanged();
     emit highScoresChanged();
+    if (m_scoreStore && m_currentRunId > 0)
+        m_scoreStore->setRunInitials(m_currentRunId, HighScoreTable::normalizeInitials(initials));
     addScore(0);
     savePersistentData();
 }
@@ -203,6 +331,15 @@ void GameEngine::stepStateTimers(qreal h)
 
 void GameEngine::loadPersistentData()
 {
+    if (m_storagePath.isEmpty()) {
+        m_scoreStore.reset();
+    } else {
+        const QString dbPath = m_storagePath == QLatin1String("native")
+            ? QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QStringLiteral("/scores.sqlite")
+            : m_storagePath + QStringLiteral(".scores.sqlite");
+        m_scoreStore = std::make_unique<SqliteScoreStore>(dbPath);
+    }
+    refreshLevelBests();
     auto s = openSettings();
     if (!s)
         return;
