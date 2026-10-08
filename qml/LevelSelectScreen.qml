@@ -25,7 +25,14 @@ FocusScope {
     readonly property int rowGap: 6
 
     // microseconds -> "M:SS.uuuuuu" (minutes unbounded), e.g. 42318457 -> "0:42.318457"
-    function formatTime(us) { return "" }
+    function formatTime(us) {
+        var t = Math.floor(us)
+        var micros = t % 1000000
+        var secs = Math.floor(t / 1000000)
+        var mins = Math.floor(secs / 60)
+        secs = secs % 60
+        return mins + ":" + (secs < 10 ? "0" : "") + secs + "." + Theme.pad(micros, 6)
+    }
 
     function activate(i) {
         if (i >= 0 && i < levelCount && i + 1 <= unlockedLevel)
@@ -103,6 +110,31 @@ FocusScope {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: row.locked
                         text: "LOCKED"
+                        color: Theme.textDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontS
+                    }
+                    property var best: root.bests && index < root.bests.length ? root.bests[index] : null
+                    property bool hasBest: !locked && best !== null && best !== undefined && best.clears > 0
+                    Text {
+                        objectName: "bestText"
+                        anchors.right: parent.right
+                        anchors.rightMargin: 12
+                        y: 4
+                        visible: row.hasBest
+                        text: row.hasBest ? "BEST " + Theme.pad(row.best.bestScore, 5) : ""
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontS
+                    }
+                    Text {
+                        objectName: "timeText"
+                        anchors.right: parent.right
+                        anchors.rightMargin: 12
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 4
+                        visible: row.hasBest
+                        text: row.hasBest ? root.formatTime(row.best.bestTimeMicros) : ""
                         color: Theme.textDim
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontS

@@ -63,6 +63,7 @@ FocusScope {
         focus: visible
         unlockedLevel: root.engine ? root.engine.unlockedLevel : 1
         levelCount: root.engine ? root.engine.levelCount : 20
+        bests: root.engine ? root.engine.levelBests : []
         onLevelChosen: (level) => {
             if (root.engine) root.engine.startLevel(level)
             root.screen = "menu"
