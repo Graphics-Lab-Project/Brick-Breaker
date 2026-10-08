@@ -30,7 +30,7 @@ Repeat until no task is READY and nothing is running:
 
 1. **Commit what already passes.** For every task whose state is `done` but whose Allowed files
    still show in `git status`: `python3 scripts/commit_task.py <KEY>`, then a ledger line.
-2. **Dispatch.** Take the READY tasks (lowest wave first) and launch up to **4 coders at once**,
+2. **Dispatch.** Take the READY tasks (lowest wave first) and launch up to **2 coders at once** (4 uncapped builds exhausted RAM and crashed the machine; each coder builds with `--parallel 3`),
    in a single message with several Agent calls. Choose the agent by the task's Model column:
    `haiku` → `task-coder-fast`, `sonnet` → `task-coder`. Dispatch prompt, nothing more:
 

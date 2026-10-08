@@ -28,7 +28,7 @@ files in this same checkout at the same time.
 2. Build in **your own** build directory (never `build/`, the orchestrator owns it):
    ```bash
    cmake -S . -B build-agents/<KEY> -G Ninja >/dev/null     # first time only
-   cmake --build build-agents/<KEY>
+   cmake --build build-agents/<KEY> --parallel 3     # always cap jobs: many coders share this machine (an uncapped build caused an OOM crash)
    ctest --test-dir build-agents/<KEY> --output-on-failure -R "^<test>$"
    ```
    Confirm it fails for the expected reason (missing behaviour). Keep the summary line.
